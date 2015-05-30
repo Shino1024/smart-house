@@ -32,3 +32,33 @@ main.h - plik zawierajacy potrzebne dane i deklaracje.
 /*
 Here I will define some helpful functions that I'll use farther
 in the code. The declarations and 
+
+*/
+
+void setup() {
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+	pinMode(x, OUTPUT);
+
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	pinMode(x, INPUT);
+	Serial.begin(9600);
+	LcdInitialise();
+	LcdClear();
+}
+
+void loop() {
+}
