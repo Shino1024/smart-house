@@ -30,6 +30,33 @@ main.h - plik zawierajacy potrzebne dane i deklaracje.
 #include "../include/main.h"
 
 /*
+Here I will define some helpful functions that I'll use further
+in the sketch.
+
+Zdefiniuje tutaj kilka przydatnych funkcji, ktorych bede uzywal
+pozniej w skeczu.
+*/
+
+/*
+void buzz() - produces a sound. Used when the button on the membrane
+keypad is pressed.
+
+void buzz() - wydaje dzwiek. Wywolywana za kazdym razem, gdy przycisk
+na klawiaturze membranowej jest nacisniety.
+*/
+void buzz() {
+
+/*
+High state on the buzzer for a short while.
+
+Stan wysoki na buzzerze na krotka chwile.
+*/
+	digitalWrite(buzzerPin, HIGH);
+	delay(2);
+	digitalWrite(buzzerPin, LOW);
+}
+
+/*
 The setup() function that runs only once just as Arduino has been connected.
 
 Funkcja setup(), wywolywana tylko raz po podlaczeniu Arduino.

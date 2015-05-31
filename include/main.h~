@@ -134,42 +134,4 @@ przechowywala wartosc ostatniego nacisnietego przycisku.
 Keypad keypad = Keypad(makeKeymap(keys), keypadRows, keypadCols, 4, 4);
 char key;
 
-/*
-Here I will define some helpful functions that I'll use further
-in the sketch.
-
-Zdefiniuje tutaj kilka przydatnych funkcji, ktorych bede uzywal
-pozniej w skeczu.
-*/
-
-/*
-void buzz() - produces a sound. Used when the button on the membrane
-keypad is pressed.
-
-void buzz() - wydaje dzwiek. Wywolywana za kazdym razem, gdy przycisk
-na klawiaturze membranowej jest nacisniety.
-*/
-void buzz() {
-
-/*
-High state on the buzzer for a short while.
-
-Stan wysoki na buzzerze na krotka chwile.
-*/
-	digitalWrite(buzzerPin, HIGH);
-	delay(2);
-	digitalWrite(buzzerPin, LOW);
-}
-
-/*
-double fahrenheit(double) - converts the temperature from Celsius to
-Fahrenheit degrees.
-
-double fahrenheit(double) - konwertuje tempreature ze stopni Celsjusza
-do stopni Fahrenheita.
-*/
-double fahrenheit(double celsius) {
-	return 1.8 * celsius + 32;
-}
-
 #endif // MAIN_H
