@@ -66,7 +66,6 @@ Na poczatku, trzeba ustalic tryby poszczegolnych pinow.
 	pinMode(dht11Pin0, INPUT); // Temperature and humidity sensors. -
 	pinMode(dht11Pin1, INPUT); // Sensory temperatury i wilgotnosci.
 
-	
 /*
 Launching the serial communication between Arduino and PC.
 Uruchomienie magistrali szeregowej pomiedzy Arduino i komputerem.
@@ -85,6 +84,18 @@ Procedury dla zainicjalizowania i wyczyszczenia ekranu LCD.
 The set of instructions which will be run over and over.
 Zestaw funkcji wywolywanych na okraglo.
 */
-
 void loop() {
+	light0 = digitalRead(lightPin0);
+	light1 = digitalRead(lightPin1);
+
+	sound0 = digitalRead(soundPin0);
+	sound1 = digitalRead(soundPin1);
+
+	distance0 = pulseIn(echoPin0, HIGH) * distConst;
+	distance1 = pulseIn(echoPin1, HIGH) * distConst;
+
+	temperature0 = dht110.temperature;
+	temperature1 = dht111.temperature;
+	humidity0 = dht110.humidity;
+	humidity1 = dht111.humidity;
 }

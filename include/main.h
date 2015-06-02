@@ -99,6 +99,12 @@ Zmienna dla pinu, do ktorego podlaczony jest generator dzwieku.
 const byte buzzerPin = x;
 
 /*
+The constant value for the proximity sensor.
+Stala dla sensora odleglosci.
+*/
+const float distConst = 0.012027;
+
+/*
 Variables for later usage.
 Zmienne do uzytku pozniej.
 */
@@ -128,6 +134,13 @@ Keypad keypad = Keypad(makeKeymap(keys), keypadRows, keypadCols, 4, 4);
 char key;
 
 /*
+The variables of the dht11 class for the humidity and temperature sensors.
+Zmienne klasy dht11 dla sensorow wilgotnosci i temperatury.
+*/
+dht11 dht110;
+dht11 dht110;
+
+/*
 The variables for the humidity and temperature.
 Zmienne wilgotnosci i temperatury.
 */
@@ -150,7 +163,7 @@ The variables for the proximity sensors.
 Zmienne dla sensorow zblizeniowych.
 */
 short distance0;
-short distance0;
+short distance1;
 
 /*
 Here I will define some helpful functions that I'll use further
