@@ -485,4 +485,21 @@ void loop() {
 	temperature1 = dht111.temperature - 3;
 	humidity0 = dht110.humidity;
 	humidity1 = dht111.humidity;
+
+        dht110.read(dht11Pin0);
+        dht111.read(dht11Pin1);
+
+        Serial.print("dist0: ");
+        Serial.println(distance0);
+        Serial.print("dist1: ");
+        Serial.println(distance1);
+        Serial.print("temp0: ");
+        Serial.println(temperature0);
+        Serial.print("temp1: ");
+        Serial.println(temperature1);
+        Serial.print("humi0: ");
+        Serial.println(humidity0);
+        Serial.print("humi1: ");
+        Serial.println(humidity1);
+        delay(350);
 }
