@@ -171,7 +171,7 @@ Funkcja czyszczaca ekran LCD. Potrzebna przy odswiezaniu.
 */
 void LcdClear(void)
 {
-  for (int index = 0; index < LCD_X * LCD_Y / 8; index++)
+  for (int index = 0; index < LCD_X * LCD_Y / 8; ++index)
   {
     LcdWrite(LCD_D, 0x00);
   }
@@ -226,6 +226,15 @@ void LcdWrite(byte dc, byte data)
   digitalWrite(PIN_SCE, HIGH);
 }
 
+/*
+The function that moves the cursor on the screen.
+Funkcja przesuwajaca kursor na ekranie.
+*/
+void gotoXY(int x, int y)
+{
+  LcdWrite( 0, 0x80 | x);  // Column.
+  LcdWrite( 0, 0x40 | y);  // Row.  
+}
 
 /*
 In this section I'm going to define constants which are mainly
@@ -311,7 +320,7 @@ const byte buzzerPin = 13;
 The constant value for the proximity sensor.
 Stala dla sensora odleglosci.
 */
-const float distConst = 0.012027;
+const float distConst = 0.013;
 
 /*
 Variables for later usage.
@@ -375,11 +384,57 @@ short distance0;
 short distance1;
 
 /*
+The variables that handle the values produced
+by sensor as text strings.
+Zmienne, ktore obsluguja wyjscia z sensorow
+w postaci ciagow tesktu.
+*/
+String sh0, sh1, st0, st1, sd0, sd1;
+char ch0[5];
+char ch1[5];
+char ct0[5];
+char ct1[5];
+char cd0[5];
+char cd1[5];
+
+/*
+The boolean table that defines whether the external devices
+are on or off.
+Tablica boolean okreslajaca stan podlaczonych urzadzen.
+*/
+boolean numOn[5] = {false, false, false, false, false};
+
+/*
+The variable that determines the format of the temperature -
+in Fahrenheit or Celsius grades.
+Zmienna okreslajaca format temperatury - w Fahrenheitach badz
+w Celsjuszach.
+*/
+boolean f = false;
+
+/*
 Here I will define some helpful functions that I'll use further
 in the sketch.
 Zdefiniuje tutaj kilka przydatnych funkcji, ktorych bede uzywal
 pozniej w skeczu.
 */
+
+/*
+void toggle(short num) - toggles the state of the external device,
+marked with the number num.
+void toggle(short led) - zmienia stan zewnetrznego urzadzenia,
+oznaczonego numerem num.
+*/
+void toggle(short num) {
+  if (numOn[num]) {
+    analogWrite(num + 8, 0);
+    numOn[num] = false;
+  }
+  else {
+    analogWrite(num + 8, 255);
+    numOn[num] = true;
+  }
+}
 
 /*
 void buzz() - produces a sound. Used when the button on the membrane
@@ -394,7 +449,7 @@ High state on the buzzer for a short while.
 Stan wysoki na buzzerze na krotka chwile.
 */
   digitalWrite(buzzerPin, HIGH);
-  delay(2);
+  delay(5);
   digitalWrite(buzzerPin, LOW);
 }
 
@@ -466,40 +521,164 @@ Procedury dla zainicjalizowania i wyczyszczenia ekranu LCD.
 	LcdInitialise();
 	LcdClear();
 }
+short check0, check1;
 
 /*
 The set of instructions which will be run over and over.
 Zestaw funkcji wywolywanych na okraglo.
 */
 void loop() {
-	light0 = digitalRead(lightPin0);
-	light1 = digitalRead(lightPin1);
 
-	sound0 = digitalRead(soundPin0);
-	sound1 = digitalRead(soundPin1);
+        /*
+        Reading the voltages and states from the pins.
+        Odczytywanie napiec i stanow z pinow.
+        */
+	light0 = digitalRead(lightPin0); // Light sensors pins. -
+	light1 = digitalRead(lightPin1); // Piny sensorow swiatla.
 
-	distance0 = getDistance0();
-	distance1 = getDistance1();
+	sound0 = digitalRead(soundPin0); // Sound sensors pins. -
+	sound1 = digitalRead(soundPin1); // Piny sensorow dzwieku.
 
-	temperature0 = dht110.temperature - 3;
-	temperature1 = dht111.temperature - 3;
-	humidity0 = dht110.humidity;
+	distance0 = getDistance0(); // Distance sensor pins. -
+	distance1 = getDistance1(); // Piny sensorow odleglosci.
+
+	temperature0 = dht110.temperature - 4; // Temperature and
+	temperature1 = dht111.temperature - 4; // humidity. -
+	humidity0 = dht110.humidity; // Temperatura i wilgotnosc.
 	humidity1 = dht111.humidity;
+
+        /*
+        The temperature formats are converted when Fahrenheits are set.
+        Konwersja formatu temperatury, gdy ustawione sa Fahrenheity.
+        */
+        if (f) {
+          temperature0 = temperature0 * 1.8 + 32;
+          temperature1 = temperature1 * 1.8 + 32;
+        }
+
+        sd0 = String(distance0);
+        sd1 = String(distance1);
+
+        st0 = String(temperature0);
+        st1 = String(temperature1);
+        sh0 = String(humidity0);
+        sh1 = String(humidity1);
 
         dht110.read(dht11Pin0);
         dht111.read(dht11Pin1);
 
-        Serial.print("dist0: ");
-        Serial.println(distance0);
-        Serial.print("dist1: ");
-        Serial.println(distance1);
-        Serial.print("temp0: ");
-        Serial.println(temperature0);
-        Serial.print("temp1: ");
-        Serial.println(temperature1);
-        Serial.print("humi0: ");
-        Serial.println(humidity0);
-        Serial.print("humi1: ");
-        Serial.println(humidity1);
-        delay(350);
+        if (light0)
+          Serial.print("L0");
+        if (light1)
+          Serial.print("L1");
+        if (sound0)
+          Serial.print("S0");
+        if (sound1)
+          Serial.print("S1");
+
+        Serial.print("d0:");
+        if (distance0 < 1000)
+          Serial.print(distance0);
+        else
+          Serial.print('e');
+        Serial.print("d1:");
+        if (distance1 < 1000)
+          Serial.print(distance1);
+        else
+          Serial.print('e');
+        Serial.print("t0:");
+        if (!check0)
+          Serial.print(temperature0);
+        else
+          Serial.print('e');
+        Serial.print("t1:");
+        if (!check1)
+          Serial.print(temperature1);
+        else
+          Serial.print('e');
+        Serial.print("h0:");
+        if (!check0)
+          Serial.print(humidity0);
+        else
+          Serial.print('e');
+        Serial.print("h1:");
+        if (!check1)
+          Serial.print(humidity1);
+        else
+          Serial.print('e');
+
+        key = keypad.getKey();
+        if (key) {
+          buzz();
+          switch (key) {
+            case '0': toggle(0); break;
+            case '1': toggle(1); break;
+            case '2': toggle(2); break;
+            case '3': toggle(3); break;
+            case '4': toggle(4); break;
+            case '5': if (!f) f = true; else f = false; break;
+          }
+        }
+        Serial.println();
+
+        sh0.toCharArray(ch0, 5);
+        sh1.toCharArray(ch1, 5);
+        st0.toCharArray(ct0, 5);
+        st1.toCharArray(ct1, 5);
+        sd0.toCharArray(cd0, 5);
+        sd1.toCharArray(cd1, 5);
+        gotoXY(0, 0);
+        LcdString("humi0: ");
+        if (!check0) {
+        LcdString(ch0);
+        LcdString("%  ");
+        }
+        else
+        LcdString("error");
+        gotoXY(0, 1);
+        LcdString("humi1: ");
+        if (!check1) {
+        LcdString(ch1);
+        LcdString("%  ");
+        }
+        else
+        LcdString("error");
+        gotoXY(0, 2);
+        LcdString("temp0: ");
+        if (!check0) {
+        LcdString(ct0);
+        if (f)
+          LcdString("F  ");
+        else
+          LcdString("C  ");
+        }
+        else
+        LcdString("error");
+        gotoXY(0, 3);
+        LcdString("temp1: ");
+        if (!check1) {
+        LcdString(ct1);
+        if (f)
+          LcdString("F  ");
+        else
+          LcdString("C  ");
+        }
+        else
+        LcdString("error");
+        gotoXY(0, 4);
+        LcdString("dist0: ");
+        if (distance0 < 1000) {
+          LcdString(cd0);
+          LcdString("cm ");
+        }
+        else
+          LcdString("error");
+        gotoXY(0, 5);
+        LcdString("dist1: ");
+        if (distance1 < 1000) {
+          LcdString(cd1);
+          LcdString("cm ");
+        }
+        else
+          LcdString("error");
 }
