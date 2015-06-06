@@ -405,12 +405,43 @@ Tablica boolean okreslajaca stan podlaczonych urzadzen.
 boolean numOn[5] = {false, false, false, false, false};
 
 /*
-The variable that determines the format of the temperature -
-in Fahrenheit or Celsius grades.
+The f variable that determines the format of the temperature -
+in Fahrenheit or Celsius grades. The i variable defines the
+distance - inches or centimeters;
 Zmienna okreslajaca format temperatury - w Fahrenheitach badz
-w Celsjuszach.
+w Celsjuszach. Druga zmienna okresla format odleglosci - cale
+badz centymetry.
 */
 boolean f = false;
+boolean i = false;
+
+/*
+The variables that determine whether the distance limit has been
+reached or not.
+Zmienne okreslajace, czy ustalony limit odleglosci zostal
+osiagniety, czy nie.
+*/
+boolean dist0Closed = false;
+boolean dist1Closed = false;
+
+/*
+The variables that limit the distance. If the sensed distance
+is shorter than this limit, the limit boolean values will change
+to true.
+Zmienne okreslajace limit odleglosci od przeszkody. Jezeli wykryta
+odleglosc jest krotsza od tego limitu, zmienne limitu boolean
+zmienia sie na true.
+*/
+short dist0Limit = 9;
+short dist1Limit = 9;
+
+/*
+The variables for the LCD screen.
+Zmienne sterujace wyswietlaczem LCD.
+*/
+short mode = 0;
+boolean choosingMode0 = false;
+boolean choosingMode1 = false;
 
 /*
 Here I will define some helpful functions that I'll use further
@@ -475,6 +506,7 @@ short getDistance1() {
   digitalWrite(trigPin1, LOW);
   return pulseIn(echoPin1, HIGH) * distConst;
 }
+
 /*
 The setup() function that runs only once just as Arduino has been connected.
 Funkcja setup(), wywolywana tylko raz po podlaczeniu Arduino.
@@ -530,6 +562,19 @@ Zestaw funkcji wywolywanych na okraglo.
 void loop() {
 
         /*
+        Read the press of the button.
+        Odczytaj nacisniety przycisk.
+        */
+        key = keypad.getKey();
+
+        /*
+        Reacting with a buzz to the keypress.
+        Reakcja dzwiekiem na wcisniecie przycisku.
+        */
+        if (key)
+          buzz();
+
+        /*
         Reading the voltages and states from the pins.
         Odczytywanie napiec i stanow z pinow.
         */
@@ -542,31 +587,48 @@ void loop() {
 	distance0 = getDistance0(); // Distance sensor pins. -
 	distance1 = getDistance1(); // Piny sensorow odleglosci.
 
+        /*
+        Determining whether the limit has been reached or not.
+        Okreslenie, czy limit zostal osiagniety czy nie.
+        */
+        if (distance0 <= dist0Limit * 5)
+          dist0Closed = true;
+        else
+          dist0Closed = false;
+        if (distance1 <= dist1Limit * 5)
+          dist1Closed = true;
+        else
+          dist1Closed = false;
+
+        /*
+        A prior required readout from the DHT11 sensors.
+        Wczesniejszy wymagany odczyt z sensorow DHT11.
+        */
+        dht110.read(dht11Pin0);
+        dht111.read(dht11Pin1);
+
+        /*
+        Reading the temperature and the humidity out.
+        Odczytanie temperatury i wilgotnosci.
+        */
 	temperature0 = dht110.temperature - 4; // Temperature and
 	temperature1 = dht111.temperature - 4; // humidity. -
 	humidity0 = dht110.humidity; // Temperatura i wilgotnosc.
 	humidity1 = dht111.humidity;
 
         /*
-        The temperature formats are converted when Fahrenheits are set.
-        Konwersja formatu temperatury, gdy ustawione sa Fahrenheity.
+        The data is sent to the computer in a certain format
+        (which is explained in the documentation of the project)
+        and then analyzed by the Python script.
+        Dane sa przesylane do komputera w danym formacie (ktory
+        jest objasniony w dokumentacji projektu), a nastepnie
+        przeanalizowany przez skrypt napisany w Pythonie.
         */
-        if (f) {
-          temperature0 = temperature0 * 1.8 + 32;
-          temperature1 = temperature1 * 1.8 + 32;
-        }
-
-        sd0 = String(distance0);
-        sd1 = String(distance1);
-
-        st0 = String(temperature0);
-        st1 = String(temperature1);
-        sh0 = String(humidity0);
-        sh1 = String(humidity1);
-
-        dht110.read(dht11Pin0);
-        dht111.read(dht11Pin1);
-
+        
+        /*
+        The readout from the light and sound sensors.
+        Odczyt z sensorow swiatla i dzwieku.
+        */
         if (light0)
           Serial.print("L0");
         if (light1)
@@ -576,109 +638,456 @@ void loop() {
         if (sound1)
           Serial.print("S1");
 
+        /*
+        The readout from the distance sensors.
+        Odczyt z sensorow odleglosci.
+        */
         Serial.print("d0:");
-        if (distance0 < 1000)
+        if (distance0 < 1000) {
           Serial.print(distance0);
+          if (dist0Closed)
+            Serial.print('C');
+        }
         else
           Serial.print('e');
         Serial.print("d1:");
-        if (distance1 < 1000)
+        if (distance1 < 1000) {
           Serial.print(distance1);
+          if (dist1Closed)
+            Serial.print('C');
+        }
         else
           Serial.print('e');
+
+        /*
+        The readout from the temperature and humidity sensors.
+        Odczyt z sensorow temperatury oraz wilgotnosci.
+        */
         Serial.print("t0:");
-        if (!check0)
+        if (humidity0 < 100)
           Serial.print(temperature0);
         else
           Serial.print('e');
         Serial.print("t1:");
-        if (!check1)
+        if (humidity1 < 100)
           Serial.print(temperature1);
         else
           Serial.print('e');
         Serial.print("h0:");
-        if (!check0)
+        if (humidity0 < 100)
           Serial.print(humidity0);
         else
           Serial.print('e');
         Serial.print("h1:");
-        if (!check1)
+        if (humidity1 < 100)
           Serial.print(humidity1);
         else
           Serial.print('e');
 
-        key = keypad.getKey();
-        if (key) {
-          buzz();
-          switch (key) {
-            case '0': toggle(0); break;
-            case '1': toggle(1); break;
-            case '2': toggle(2); break;
-            case '3': toggle(3); break;
-            case '4': toggle(4); break;
-            case '5': if (!f) f = true; else f = false; break;
-          }
-        }
+        /*
+        Reading the device states.
+        Odczyt stanow urzadzen.
+        */
+        Serial.print('O');
+        for (short it = 0; it < 5; ++it)
+          if (numOn[it])
+            Serial.print(it);
+
         Serial.println();
 
-        sh0.toCharArray(ch0, 5);
-        sh1.toCharArray(ch1, 5);
-        st0.toCharArray(ct0, 5);
-        st1.toCharArray(ct1, 5);
-        sd0.toCharArray(cd0, 5);
-        sd1.toCharArray(cd1, 5);
-        gotoXY(0, 0);
-        LcdString("humi0: ");
-        if (!check0) {
-        LcdString(ch0);
-        LcdString("%  ");
+        /*
+        The temperature formats are converted when Fahrenheits are set.
+        Konwersja formatu temperatury, gdy ustawione sa Fahrenheity.
+        */
+        if (f) {
+          temperature0 = temperature0 * 1.8 + 32;
+          temperature1 = temperature1 * 1.8 + 32;
         }
-        else
-        LcdString("error");
-        gotoXY(0, 1);
-        LcdString("humi1: ");
-        if (!check1) {
-        LcdString(ch1);
-        LcdString("%  ");
+        if (i) {
+          distance0 = (float)distance0 / 2.54;
+          distance1 = (float)distance1 / 2.54;
         }
-        else
-        LcdString("error");
-        gotoXY(0, 2);
-        LcdString("temp0: ");
-        if (!check0) {
-        LcdString(ct0);
-        if (f)
-          LcdString("F  ");
-        else
-          LcdString("C  ");
+
+        /*
+        Here I'm going to draw on the LCD screen.
+        Tutaj zamierzam wysylac dane do ekranu LCD.
+        */
+
+        if (key == NO_KEY)
+          key = 0;
+
+        /*
+        The main menu mode.
+        Tryb glownego menu.
+        */
+        if (mode == 0) {
+	  gotoXY(0, 0);
+	  LcdString("*MAIN  MENU*");
+	  gotoXY(0, 1);
+	  LcdString("1)Show data");
+	  gotoXY(0, 2);
+	  LcdString("2)Deg & dist");
+	  gotoXY(0, 3);
+	  LcdString("3)Dist limit");
+	  gotoXY(0, 4);
+	  LcdString("4)Manage dev");
+	  gotoXY(0, 5);
+	  LcdString("5)SD logging");
+
+	  if (key == '1')
+	    mode = 1;
+	  else if (key == '2')
+	    mode = 2;
+	  else if (key == '3')
+	    mode = 3;
+	  else if (key == '4') {
+	    mode = 4;
+            key = 1;
+          }
+//	  else if (key == '5')
+//	    mode = 5;
+          }
+
+          /*
+          The sensor mode. It presents the data from the sensors
+          on the LCD screen.
+          Tryb sensorow. Wypisuje na ekran LCD dane z sensorow.
+          */
+          else if (mode == 1) {
+	    sd0 = String(distance0);
+	    sd1 = String(distance1);
+	    st0 = String(temperature0);
+	    st1 = String(temperature1);
+	    sh0 = String(humidity0);
+	    sh1 = String(humidity1);
+
+	    sh0.toCharArray(ch0, 5);
+	    sh1.toCharArray(ch1, 5);
+	    st0.toCharArray(ct0, 5);
+	    st1.toCharArray(ct1, 5);
+	    sd0.toCharArray(cd0, 5);
+	    sd1.toCharArray(cd1, 5);
+
+	    gotoXY(0, 0);
+	    LcdString("humi0: ");
+	    if (humidity0 < 100) {
+	      LcdString(ch0);
+	      LcdString("%  ");
+	    }
+	    else
+	      LcdString("error");
+	    gotoXY(0, 1);
+	    LcdString("humi1: ");
+	    if (humidity1 < 100) {
+	      LcdString(ch1);
+	      LcdString("%  ");
+	    }
+	    else
+	      LcdString("error");
+	    gotoXY(0, 2);
+	    LcdString("temp0: ");
+	    if (humidity0 < 100) {
+	      LcdString(ct0);
+              if (temperature0 < 10)
+	        if (f)
+	          LcdString("F   ");
+	        else
+	          LcdString("C   ");
+              else
+	        if (f)
+	          LcdString("F  ");
+	        else
+	          LcdString("C  ");
+	    }
+	    else
+	      LcdString("error");
+	    gotoXY(0, 3);
+	    LcdString("temp1: ");
+	    if (humidity1 < 100) {
+	      LcdString(ct1);
+              if (temperature1 < 10)
+	        if (f)
+	          LcdString("F   ");
+	        else
+	          LcdString("C   ");
+              else
+	        if (f)
+	          LcdString("F  ");
+	        else
+	          LcdString("C  ");
+	    }
+	    else
+	      LcdString("error");
+	    gotoXY(0, 4);
+	    LcdString("dist0: ");
+	    if (distance0 < 1000) {
+	      LcdString(cd0);
+              if (distance0 < 10)
+                if (i)
+                  LcdString("in  ");
+                else
+	          LcdString("cm  ");
+              else if (distance0 < 100)
+                if (i)
+                  LcdString("in ");
+                else
+	          LcdString("cm ");
+              else
+                if (i)
+                  LcdString("in");
+                else
+	          LcdString("cm");
+	    }
+	    else
+	      LcdString("error");
+	    gotoXY(0, 5);
+	    LcdString("dist1: ");
+	    if (distance1 < 1000) {
+	      LcdString(cd1);
+              if (distance1 < 10)
+                if (i)
+                  LcdString("in  ");
+                else
+	          LcdString("cm  ");
+              else if (distance1 < 100)
+                if (i)
+                  LcdString("in ");
+                else
+	          LcdString("cm ");
+              else
+                if (i)
+                  LcdString("in");
+                else
+	          LcdString("cm");
+	    }
+	    else
+	      LcdString("error");
+
+            if (key == '#')
+	      mode = 0;
+          }
+
+        /*
+        The distance and degree format setting mode.
+        Tryb ustawiania formatow temperatury i odleglosci.
+        */
+	else if (mode == 2) {
+	  gotoXY(0, 0);
+	  LcdString("Deg and dist");
+	  gotoXY(0, 1);
+	  LcdString("1)Deg: ");
+	  if (f)
+	    LcdCharacter('F');
+	  else
+	    LcdCharacter('C');
+	  gotoXY(0, 2);
+	  LcdString("2)Dist: ");
+	  if (i)
+	    LcdString("in");
+	  else
+	    LcdString("cm");
+
+	if (key == '1') {
+	  gotoXY(24, 1);
+	  if (f) {
+	    f = false;
+	      LcdCharacter('C');
+	  }
+	  else {
+	    f = true;
+	    LcdCharacter('F');
+	  }
+	}
+
+	if (key == '2') {
+	  gotoXY(28, 1);
+	  if (i) {
+	    i = false;
+	    LcdString("cm");
+	  }
+	  else {
+	    i = true;
+	    LcdString("in");
+	  }
+	}
+
+	if (key == '#')
+	  mode = 0;
         }
-        else
-        LcdString("error");
-        gotoXY(0, 3);
-        LcdString("temp1: ");
-        if (!check1) {
-        LcdString(ct1);
-        if (f)
-          LcdString("F  ");
-        else
-          LcdString("C  ");
+
+        /*
+        The mode for setting up the distance limit.
+        Tryb ustawiania limitu odleglosci.
+        */
+        if (mode == 3) {
+	  gotoXY(0, 0);
+	  LcdString("Dist limit");
+	  gotoXY(0, 1);
+	  LcdString("A or B?");
+	  gotoXY(0, 2);
+          if (!(choosingMode0 || choosingMode1))
+	    LcdString("A)Dist0: ");
+          else {
+            gotoXY(7, 2);
+            LcdString(")Dist0: ");
+          }
+	  gotoXY(55, 2);
+          if (!(choosingMode0 || choosingMode1))
+	    LcdCharacter(dist0Limit + '0');
+	  gotoXY(0, 3);
+          if (!(choosingMode0 || choosingMode1))
+	    LcdString("B)Dist1: ");
+          else {
+            gotoXY(7, 3);
+            LcdString(")Dist1: ");
+          }
+	  gotoXY(55, 3);
+          if (!(choosingMode0 || choosingMode1))
+	    LcdCharacter(dist1Limit + '0');
+	  if (key == 'A') {
+	    choosingMode0 = true;
+            choosingMode1 = false;
+          }
+	  else if (key == 'B') {
+            choosingMode0 = false;
+	    choosingMode1 = true;
+          }
+          else if (key == '#') {
+            choosingMode0 = false;
+            choosingMode0 = false;
+            mode = 0;
+          }
+	if (choosingMode0) {
+	  if (key == 'B') {
+	    choosingMode0 = false;
+	    choosingMode1 = true;
+	  }
+	  else if (key == '#') {
+	    mode = 0;
+	    choosingMode0 = false;
+	    choosingMode1 = false;
+	  }
+	  else {
+	    gotoXY(0, 2);
+	    LcdCharacter('>');
+            gotoXY(0, 3);
+            LcdCharacter('B');
+	    switch(key) {
+	      case '1': dist0Limit = 1; break;
+	      case '2': dist0Limit = 2; break;
+	      case '3': dist0Limit = 3; break;
+	      case '4': dist0Limit = 4; break;
+	      case '5': dist0Limit = 5; break;
+	      case '6': dist0Limit = 6; break;
+	      case '7': dist0Limit = 7; break;
+	      case '8': dist0Limit = 8; break;
+	      case '9': dist0Limit = 9; break;
+	    }
+	  gotoXY(55, 2);
+	  LcdCharacter(dist0Limit + '0');
+	  }
         }
-        else
-        LcdString("error");
-        gotoXY(0, 4);
-        LcdString("dist0: ");
-        if (distance0 < 1000) {
-          LcdString(cd0);
-          LcdString("cm ");
+	else if (choosingMode1) {
+	  if (key == 'A') {
+	    choosingMode0 = true;
+	    choosingMode1 = false;
+	  }
+	  else if (key == '#') {
+	    mode = 0;
+	    choosingMode0 = false;
+	    choosingMode1 = false;
+	  }
+	  else {
+	    gotoXY(0, 3);
+	    LcdCharacter('>');
+            gotoXY(0, 2);
+            LcdCharacter('A');
+	    switch(key) {
+	      case '1': dist1Limit = 1; break;
+	      case '2': dist1Limit = 2; break;
+	      case '3': dist1Limit = 3; break;
+	      case '4': dist1Limit = 4; break;
+	      case '5': dist1Limit = 5; break;
+	      case '6': dist1Limit = 6; break;
+	      case '7': dist1Limit = 7; break;
+	      case '8': dist1Limit = 8; break;
+	      case '9': dist1Limit = 9; break;
+	    }
+	    gotoXY(55, 3);
+	    LcdCharacter(dist1Limit + '0');
+	  }
         }
-        else
-          LcdString("error");
-        gotoXY(0, 5);
-        LcdString("dist1: ");
-        if (distance1 < 1000) {
-          LcdString(cd1);
-          LcdString("cm ");
         }
-        else
-          LcdString("error");
+
+        /*
+        The mode for managing the devices.
+        Tryb zarzadzania urzadzeniami.
+        */
+        else if (mode == 4) {
+	  gotoXY(0, 0);
+	  LcdString("Manage devs");
+	  for (short it = 0; it < 5; ++it) {
+	    gotoXY(0, it + 1);
+	    LcdCharacter(it + '0');
+	    gotoXY(7, it + 1);
+	    LcdString(": O");
+	    gotoXY(29, it + 1);
+	    if (numOn[it])
+	      LcdCharacter('n');
+	    else
+	      LcdString("ff");
+	  }
+	  switch (key) {
+	    case '0':
+	      toggle(key - '0');
+	      gotoXY(29, 2);
+	      if (numOn[key - '0'])
+	        LcdString("ff");
+	      else
+	        LcdString("n ");
+	      break;
+	    case '1':
+	      toggle(key - '0');
+	      gotoXY(29, 3);
+	      if (numOn[key - '0'])
+	        LcdString("ff");
+	      else
+	        LcdString("n ");
+	      break;
+	    case '2':
+	      toggle(key - '0');
+	      gotoXY(29, 4);
+	      if (numOn[key - '0'])
+	        LcdString("ff");
+	      else
+	        LcdString("n ");
+              break;
+	    case '3':
+	      toggle(key - '0');
+	      gotoXY(29, 5);
+	      if (numOn[key - '0'])
+	        LcdString("ff");
+	      else
+	        LcdString("n ");
+	      break;
+	    case '4':
+	      toggle(key - '0');
+	      gotoXY(29, 6);
+              if (numOn[key - '0'])
+		LcdString("ff");
+	      else
+		LcdString("n ");
+	      break;
+            case '#':
+              mode = 0;
+              break;
+	    }
+          }
+
+          /*
+          The LCD screen is refreshed after any keypress.
+          Ekran LCD jest odswiezany po kazdym nacisnieciu przycisku.
+          */
+          if (key)
+            LcdClear();
 }
