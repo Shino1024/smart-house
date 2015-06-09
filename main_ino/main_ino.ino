@@ -13,15 +13,19 @@ czytelnosc.
 Includes:
 Keypad.h - for the membrane keyboard.
 dht11.h - for the temperature and humidity sensor.
-main.h - the file which contanins the essential data and declarations.
+SPI.h - needed for handling the SPI interface on the board.
+SD.h - for the SD card management.
 Biblioteki:
 Keypad.h - dla klawiatury membranowej.
 dht11.h - dla sensora temperatury i wilgotnosci.
-main.h - plik zawierajacy potrzebne dane i deklaracje.
+SPI.h - potrzebne do obslugi interfejsu SPI na plytce.
+SD.h - dla obslugi karty SD.
 */
 
 #include <Keypad.h>
 #include <dht11.h>
+#include <SPI.h>
+#include <SD.h>
 
 /*
 The functions and variables needed for a proper LCD screen configuration.
@@ -300,6 +304,15 @@ const byte LED3Pin = 11;
 const byte LED4Pin = 12;
 
 /*
+The variables for the SD card reader.
+Zmienne do obslugi czytnika kart SD.
+*/
+const byte SDMISOPin = 50;
+const byte SDMOSIPin = 51;
+const byte SDSCKPin = 52;
+const byte SDSSPin = 53;
+
+/*
 The variables of the pins which are connected to the membrane keypad.
 They're defined as 2 arrays as it is the only correct input for the
 constructor of the Keypad class.
@@ -398,6 +411,20 @@ char cd0[5];
 char cd1[5];
 
 /*
+The File variable that is repsonsible for the communication
+with the SD card and managing the specified file on it.
+Obiekt File, ktory zajmuje sie komunikacja z karta SD oraz
+zapisem okreslonego pliku.
+*/
+File logFile;
+
+/*
+The variable that holds the name of the logging file.
+Nazwa zmiennej, przechowujaca nazwe pliku z logiem.
+*/
+char* filename = "log.log"
+
+/*
 The boolean table that defines whether the external devices
 are on or off.
 Tablica boolean okreslajaca stan podlaczonych urzadzen.
@@ -442,6 +469,13 @@ Zmienne sterujace wyswietlaczem LCD.
 short mode = 0;
 boolean choosingMode0 = false;
 boolean choosingMode1 = false;
+
+/*
+The variable that contains the information whether the card has failed
+to have been initialized.
+Zmienna przechowujaca informacje o tym, czy udalo sie zainicjalizowac karte.
+*/
+boolean isSDInit = false;
 
 /*
 Here I will define some helpful functions that I'll use further
@@ -552,6 +586,16 @@ Procedury dla zainicjalizowania i wyczyszczenia ekranu LCD.
 */
 	LcdInitialise();
 	LcdClear();
+
+/*
+Initializing the SD card.
+Inicjalizacja karty SD.
+*/
+	if (SD.begin(SDSSPin))
+		isSDInit = true;
+
+
+
 }
 short check0, check1;
 
