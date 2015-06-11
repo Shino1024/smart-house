@@ -333,7 +333,7 @@ const byte buzzerPin = 13;
 The constant value for the proximity sensor.
 Stala dla sensora odleglosci.
 */
-const float distConst = 0.013;
+const float distConst = 0.012;
 
 /*
 Variables for later usage.
@@ -422,7 +422,7 @@ File logFile;
 The variable that holds the name of the logging file.
 Nazwa zmiennej, przechowujaca nazwe pliku z logiem.
 */
-char* filename = "log.log"
+char* filename = "log.log";
 
 /*
 The boolean table that defines whether the external devices
@@ -441,6 +441,12 @@ badz centymetry.
 */
 boolean f = false;
 boolean i = false;
+
+/*
+The variable that sets the SD logging mode.
+Zmienna, ustawiajaca tryb logowania danych na karcie SD.
+*/
+boolean SDLogging = false;
 
 /*
 The variables that determine whether the distance limit has been
@@ -476,6 +482,14 @@ to have been initialized.
 Zmienna przechowujaca informacje o tym, czy udalo sie zainicjalizowac karte.
 */
 boolean isSDInit = false;
+
+/*
+The String variable that holds the ordered data which will
+be sent to the PC and/or saved on the SD card.
+Zmienna typu String, ktora przechowuje ulozone dane, ktore beda
+wyslane do komputera i/lub zapisane na karcie SD.
+*/
+String data;
 
 /*
 Here I will define some helpful functions that I'll use further
@@ -591,11 +605,10 @@ Procedury dla zainicjalizowania i wyczyszczenia ekranu LCD.
 Initializing the SD card.
 Inicjalizacja karty SD.
 */
-	if (SD.begin(SDSSPin))
-		isSDInit = true;
-
-
-
+	if (SD.begin(SDSSPin)) {
+	  isSDInit = true;
+          SDLogging = true;
+        }
 }
 short check0, check1;
 
@@ -674,70 +687,113 @@ void loop() {
         Odczyt z sensorow swiatla i dzwieku.
         */
         if (light0)
-          Serial.print("L0");
+          data += ("0,");
+        else
+          data += ("1,");
         if (light1)
-          Serial.print("L1");
+          data += ("0,");
+        else
+          data += ("1,");
         if (sound0)
-          Serial.print("S0");
+          data += ("0,");
+        else
+          data += ("1,");
         if (sound1)
-          Serial.print("S1");
+          data += ("0,");
+        else
+          data += ("1,");
 
         /*
         The readout from the distance sensors.
         Odczyt z sensorow odleglosci.
         */
-        Serial.print("d0:");
-        if (distance0 < 1000) {
-          Serial.print(distance0);
-          if (dist0Closed)
-            Serial.print('C');
-        }
+        if (distance0 < 1000)
+          data += (distance0);
         else
-          Serial.print('e');
-        Serial.print("d1:");
-        if (distance1 < 1000) {
-          Serial.print(distance1);
-          if (dist1Closed)
-            Serial.print('C');
-        }
+          data += ('e');
+        data += (',');
+        if (distance1 < 1000)
+          data += (distance1);
         else
-          Serial.print('e');
+          data += ('e');
+        data += (',');
+
+        /*
+        The information whether the limit has been reached or not.
+        Przekazanie informacji o przekroczeniu limitow.
+        */
+        if (dist0Closed)
+          data += ('1');
+        else
+          data += ('0');
+        data += (',');
+        if (dist1Closed)
+          data += ('1');
+        else
+          data += ('0');
+        data += (',');
 
         /*
         The readout from the temperature and humidity sensors.
         Odczyt z sensorow temperatury oraz wilgotnosci.
         */
-        Serial.print("t0:");
         if (humidity0 < 100)
-          Serial.print(temperature0);
+          data += (temperature0);
         else
-          Serial.print('e');
-        Serial.print("t1:");
+          data += ('e');
+        data += (',');
         if (humidity1 < 100)
-          Serial.print(temperature1);
+          data += (temperature1);
         else
-          Serial.print('e');
-        Serial.print("h0:");
+          data += ('e');
+        data += (',');
         if (humidity0 < 100)
-          Serial.print(humidity0);
+          data += (humidity0);
         else
-          Serial.print('e');
-        Serial.print("h1:");
+          data += ('e');
+        data += (',');
         if (humidity1 < 100)
-          Serial.print(humidity1);
+          data += (humidity1);
         else
-          Serial.print('e');
+          data += ('e');
+        data += (',');
 
         /*
         Reading the device states.
         Odczyt stanow urzadzen.
         */
-        Serial.print('O');
-        for (short it = 0; it < 5; ++it)
+        for (short it = 0; it < 5; ++it) {
           if (numOn[it])
-            Serial.print(it);
+            data += ('1');
+          else
+            data += ('0');
+          if (it != 4)
+            data += (',');
+        }
 
-        Serial.println();
+        /*
+        Open the file on the SD card, save the data to it and close it.
+        Otworz plik na karcie SD, zapisz na nim dane i zamknij go.
+        */
+        if (SDLogging && isSDInit) {
+          logFile = SD.open(filename, FILE_WRITE);
+          if (logFile) {
+            logFile.println(data);
+            logFile.close();
+          }
+        }
+
+        /*
+        Send the data to the computer.
+        Wyslij dane na komputer.
+        */
+        Serial.println(data);
+
+        /*
+        Emptying the data variable.
+        Wymazywanie zmiennej z danymi.
+        */
+        data = "";
 
         /*
         The temperature formats are converted when Fahrenheits are set.
@@ -788,8 +844,8 @@ void loop() {
 	    mode = 4;
             key = 1;
           }
-//	  else if (key == '5')
-//	    mode = 5;
+	  else if (key == '5')
+	    mode = 5;
           }
 
           /*
@@ -1126,6 +1182,36 @@ void loop() {
               mode = 0;
               break;
 	    }
+          }
+          else if (mode == 5) {
+            gotoXY(0, 0);
+            LcdString("SD logging");
+            gotoXY(0, 1);
+            if (isSDInit) {
+              LcdString("1)Mode: ");
+              if (SDLogging)
+                LcdString("On");
+              else
+                LcdString("Off");
+            }
+            else {
+              LcdString("The card is");
+              gotoXY(0, 2);
+              LcdString("not present");
+              gotoXY(0, 3);
+              LcdString("or the SD");
+              gotoXY(0, 4);
+              LcdString("reader has");
+              gotoXY(0, 5);
+              LcdString("failed.");
+            }
+            if (key == '1' && isSDInit)
+              if (SDLogging)
+                SDLogging = false;
+              else
+                SDLogging = true;
+            else if (key == '#')
+              mode = 0;
           }
 
           /*
