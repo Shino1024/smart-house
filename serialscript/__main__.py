@@ -232,7 +232,7 @@ def getData():
 				x2.configure(text = "Sound!", background = "yellow")
 			else:
 				x2.configure(text = "...", background = "white")
-			if dataArray[4] == 'e':
+			if dataArray[6] == 'e':
 				x3.configure(text = "Error!", background = "blue")
 			elif int(dataArray[6]):
 				x3.configure(text = "Closed!", background = "red")
@@ -261,7 +261,7 @@ def getData():
 				l2.configure(text = "Sound!", background = "yellow")
 			else:
 				l2.configure(text = "...", background = "white")
-			if dataArray[5] == 'e':
+			if dataArray[7] == 'e':
 				l3.configure(text = "Error!", background = "blue")
 			elif int(dataArray[7]):
 				l3.configure(text = "Closed!", background = "red")
