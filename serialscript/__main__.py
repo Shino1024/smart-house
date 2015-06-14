@@ -202,7 +202,7 @@ The function that opens the project's website.
 Funkcja otwierajaca strone projektu.
 '''
 def callback0(event):
-	webbrowser.open_new(r"http://www.google.com/")
+	webbrowser.open_new(r"http://www.rpsdusu-sh.com/homepage")
 
 '''
 The function that gets the data from Arduino and saves it to the data files.
@@ -338,6 +338,12 @@ The window should not be resizable.
 Okno nie moze umozliwiac zmiany swojej wielkosci.
 '''
 app.resizable(0, 0)
+
+'''
+The title of the program.
+Tytul okna.
+'''
+app.wm_title("Smart House Manager")
 
 '''
 The main loop of the program.
