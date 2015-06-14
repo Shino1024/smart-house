@@ -283,25 +283,25 @@ def getData():
 	if mode == 3:
 		if data:
 			if int(dataArray[12]):
-				c1.configure(text = "On", background = "green")
+				c1.configure(text = "0. On", background = "green")
 			else:
-				c1.configure(text = "Off", background = "red")
+				c1.configure(text = "0. Off", background = "red")
 			if int(dataArray[13]):
-				c2.configure(text = "On", background = "green")
+				c2.configure(text = "1. On", background = "green")
 			else:
-				c2.configure(text = "Off", background = "red")
+				c2.configure(text = "1. Off", background = "red")
 			if int(dataArray[14]):
-				c3.configure(text = "On", background = "green")
+				c3.configure(text = "2. On", background = "green")
 			else:
-				c3.configure(text = "Off", background = "red")
+				c3.configure(text = "2. Off", background = "red")
 			if int(dataArray[15]):
-				c4.configure(text = "On", background = "green")
+				c4.configure(text = "3. On", background = "green")
 			else:
-				c4.configure(text = "Off", background = "red")
+				c4.configure(text = "3. Off", background = "red")
 			if int(dataArray[16]):
-				c5.configure(text = "On", background = "green")
+				c5.configure(text = "4. On", background = "green")
 			else:
-				c5.configure(text = "Off", background = "red")
+				c5.configure(text = "4. Off", background = "red")
 
 	'''
 	Recurrence.
