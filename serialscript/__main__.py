@@ -202,7 +202,7 @@ The function that opens the project's website.
 Funkcja otwierajaca strone projektu.
 '''
 def callback0(event):
-	webbrowser.open_new(r"http://www.rpsdusu-sh.com/homepage")
+	webbrowser.open_new(r"http://www.rpsdusu-sh.wix.com/homepage")
 
 '''
 The function that gets the data from Arduino and saves it to the data files.
