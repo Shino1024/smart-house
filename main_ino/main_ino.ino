@@ -707,12 +707,12 @@ void loop() {
         The readout from the distance sensors.
         Odczyt z sensorow odleglosci.
         */
-        if (distance0 < 1000)
+        if (distance0 < 1000 && distance0 > 4)
           data += (distance0);
         else
           data += ('e');
         data += (',');
-        if (distance1 < 1000)
+        if (distance1 < 1000 && distance0 > 4)
           data += (distance1);
         else
           data += ('e');
@@ -722,12 +722,16 @@ void loop() {
         The information whether the limit has been reached or not.
         Przekazanie informacji o przekroczeniu limitow.
         */
-        if (dist0Closed)
+        if (distance0 >= 1000 || distance0 < 4)
+          data += ('e');
+        else if (dist0Closed)
           data += ('1');
         else
           data += ('0');
         data += (',');
-        if (dist1Closed)
+        if (distance1 >= 1000 || distance1 < 4)
+          data += ('e');
+        else if (dist1Closed)
           data += ('1');
         else
           data += ('0');
@@ -920,7 +924,7 @@ void loop() {
 	      LcdString("error");
 	    gotoXY(0, 4);
 	    LcdString("dist0: ");
-	    if (distance0 < 1000) {
+	    if (distance0 < 1000 && distance0 > 4) {
 	      LcdString(cd0);
               if (distance0 < 10)
                 if (i)
@@ -942,7 +946,7 @@ void loop() {
 	      LcdString("error");
 	    gotoXY(0, 5);
 	    LcdString("dist1: ");
-	    if (distance1 < 1000) {
+	    if (distance1 < 1000 && distance1 > 4) {
 	      LcdString(cd1);
               if (distance1 < 10)
                 if (i)
@@ -1133,7 +1137,7 @@ void loop() {
 	    LcdString(": O");
 	    gotoXY(29, it + 1);
 	    if (numOn[it])
-	      LcdCharacter('n');
+	      LcdString("n ");
 	    else
 	      LcdString("ff");
 	  }
