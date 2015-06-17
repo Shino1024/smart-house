@@ -1,5 +1,7 @@
 # smart-house
 <br>
+Link to the project: <a href="http://www.rpsdusu-sh.wix.com/homepage">RPSDUSU-SH</a>
+<br>
 <font size="20"> A smart house system for the "Regionalny program stypendialny dla uczniów szczególnie
 uzdolnionych" Masovia project.</font>
 <br>
